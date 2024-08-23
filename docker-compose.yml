@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      args:
+        user: www-data
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: registry.adinusa.id/laraschool/laraschool-vian:1.0
+    container_name: laraschool-app
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - laraschool-net
+    volumes:
+      - volume-laraschool-app:/var/www/laravel/
+
+  db:
+    image: registry.adinusa.id/btacademy/mysql:latest
+    container_name: ${DB_HOST}
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - volume-laraschool-db:/docker-entrypoint-initdb.d
+    networks:
+      - laraschool-net
+
+  web:
+    image: registry.adinusa.id/btacademy/nginx:latest
+    container_name: laraschool-nginx
+    restart: unless-stopped
+    ports:
+      - 8080:80
+    networks:
+      - laraschool-net
+    volumes:
+      - volume-laraschool-nginx:/etc/nginx/
+
+networks:
+  laraschool-net:
+    name: laraschool-net
+    driver: bridge
+
+volumes:
+  volume-laraschool-app:
+    name: volume-laraschool-app
+  volume-laraschool-db:
+    name: volume-laraschool-db
+  volume-laraschool-nginx:
+    name: volume-laraschool-nginx
